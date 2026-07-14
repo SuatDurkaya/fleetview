@@ -23,4 +23,5 @@ jobs:
         run: pip install -r requirements.txt
 
       - name: Uygulamanın import edilebildiğini kontrol et
-        run: python -c "from app.main import app; print('OK: FastAPI app başarıyla yüklendi')"
+        run: |
+          python -c "from app.main import app; print('OK - FastAPI app basariyla yuklendi')"
