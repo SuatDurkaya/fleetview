@@ -1,0 +1,394 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>FleetView</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;700&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #0D1117;
+    --panel: #131A22;
+    --panel-border: #1F2A35;
+    --text-primary: #E6EDF3;
+    --text-secondary: #7D8B99;
+    --accent: #4FD1C5;
+    --accent-dim: #2B4A47;
+    --warn: #F0B429;
+    --danger: #F0654A;
+    --ok: #4FD1C5;
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    background: var(--bg);
+    color: var(--text-primary);
+    font-family: 'Inter', sans-serif;
+    min-height: 100vh;
+    padding: 40px 24px;
+  }
+
+  .wrap { max-width: 1100px; margin: 0 auto; }
+
+  header {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-end;
+    margin-bottom: 32px;
+    padding-bottom: 20px;
+    border-bottom: 1px solid var(--panel-border);
+  }
+
+  .brand {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 13px;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    color: var(--accent);
+    margin-bottom: 6px;
+  }
+
+  h1 {
+    font-size: 28px;
+    font-weight: 700;
+    letter-spacing: -0.01em;
+  }
+
+  .subtitle {
+    color: var(--text-secondary);
+    font-size: 14px;
+    margin-top: 4px;
+  }
+
+  #refresh-status {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 12px;
+    color: var(--text-secondary);
+    text-align: right;
+  }
+
+  #refresh-status .dot {
+    display: inline-block;
+    width: 6px;
+    height: 6px;
+    border-radius: 50%;
+    background: var(--ok);
+    margin-right: 6px;
+    animation: pulse 2s infinite;
+  }
+
+  @keyframes pulse {
+    0%, 100% { opacity: 1; }
+    50% { opacity: 0.35; }
+  }
+
+  .summary-row {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+    gap: 12px;
+    margin-bottom: 32px;
+  }
+
+  .summary-card {
+    background: var(--panel);
+    border: 1px solid var(--panel-border);
+    border-radius: 8px;
+    padding: 16px 18px;
+  }
+
+  .summary-card .label {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 11px;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: var(--text-secondary);
+    margin-bottom: 8px;
+  }
+
+  .summary-card .value {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 26px;
+    font-weight: 700;
+  }
+
+  .summary-card .value.accent { color: var(--accent); }
+
+  section.provider {
+    background: var(--panel);
+    border: 1px solid var(--panel-border);
+    border-radius: 8px;
+    margin-bottom: 16px;
+    overflow: hidden;
+  }
+
+  .provider-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 14px 18px;
+    border-bottom: 1px solid var(--panel-border);
+  }
+
+  .provider-name {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    font-weight: 600;
+    font-size: 14px;
+  }
+
+  .provider-badge {
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+  }
+
+  .provider-badge.aws { background: #F0B429; }
+  .provider-badge.hetzner { background: #4FD1C5; }
+  .provider-badge.digitalocean { background: #4A90E2; }
+
+  .provider-count {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 12px;
+    color: var(--text-secondary);
+  }
+
+  table { width: 100%; border-collapse: collapse; }
+
+  th {
+    text-align: left;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 10px;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: var(--text-secondary);
+    padding: 10px 18px;
+    font-weight: 500;
+  }
+
+  td {
+    padding: 12px 18px;
+    font-size: 13px;
+    border-top: 1px solid var(--panel-border);
+  }
+
+  td.mono { font-family: 'JetBrains Mono', monospace; font-size: 12px; color: var(--text-secondary); }
+
+  .status-pill {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 11px;
+    padding: 3px 9px;
+    border-radius: 20px;
+  }
+
+  .status-pill.running { background: var(--accent-dim); color: var(--accent); }
+  .status-pill.stopped { background: #3A2A28; color: var(--danger); }
+  .status-pill.unknown { background: #2A2E33; color: var(--text-secondary); }
+
+  .empty-state {
+    padding: 28px 18px;
+    color: var(--text-secondary);
+    font-size: 13px;
+    font-family: 'JetBrains Mono', monospace;
+  }
+
+  .error-banner {
+    background: #2A1815;
+    border: 1px solid #4A2A20;
+    color: var(--danger);
+    padding: 14px 18px;
+    border-radius: 8px;
+    margin-bottom: 24px;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 12px;
+    display: none;
+  }
+
+  footer {
+    margin-top: 32px;
+    text-align: center;
+    color: var(--text-secondary);
+    font-size: 12px;
+    font-family: 'JetBrains Mono', monospace;
+  }
+</style>
+</head>
+<body>
+  <div class="wrap">
+    <header>
+      <div>
+        <div class="brand">FleetView</div>
+        <h1>Kaynak Panosu</h1>
+        <div class="subtitle">AWS · Hetzner · DigitalOcean — tek ekranda</div>
+      </div>
+      <div id="refresh-status"><span class="dot"></span>bağlanıyor…</div>
+    </header>
+
+    <div class="error-banner" id="error-banner"></div>
+
+    <div class="summary-row" id="summary-row"></div>
+
+    <div id="providers-container"></div>
+
+    <footer>API_BASE = <span id="api-base-label"></span> · her 15 saniyede otomatik yenilenir</footer>
+  </div>
+
+<script>
+  // Backend'in FastAPI adresi — farklı bir portta/host'ta çalışıyorsa burayı değiştir
+  const API_BASE = "http://localhost:8000";
+  document.getElementById("api-base-label").textContent = API_BASE;
+
+  const PROVIDER_LABELS = {
+    aws: "AWS",
+    hetzner: "Hetzner",
+    digitalocean: "DigitalOcean",
+  };
+
+  function statusClass(status) {
+    const s = (status || "").toLowerCase();
+    if (["running", "active"].includes(s)) return "running";
+    if (["stopped", "off"].includes(s)) return "stopped";
+    return "unknown";
+  }
+
+  function renderSummary(resources) {
+    const byProvider = {};
+    for (const r of resources) {
+      byProvider[r.provider] = byProvider[r.provider] || { count: 0, cost: 0 };
+      byProvider[r.provider].count += 1;
+      byProvider[r.provider].cost += r.monthly_cost_usd || 0;
+    }
+
+    const totalCost = resources.reduce((sum, r) => sum + (r.monthly_cost_usd || 0), 0);
+
+    const container = document.getElementById("summary-row");
+    container.innerHTML = "";
+
+    const totalCard = document.createElement("div");
+    totalCard.className = "summary-card";
+    totalCard.innerHTML = `
+      <div class="label">Toplam Kaynak</div>
+      <div class="value accent">${resources.length}</div>
+    `;
+    container.appendChild(totalCard);
+
+    const costCard = document.createElement("div");
+    costCard.className = "summary-card";
+    costCard.innerHTML = `
+      <div class="label">Tahmini Aylık Maliyet</div>
+      <div class="value">$${totalCost.toFixed(2)}</div>
+    `;
+    container.appendChild(costCard);
+
+    for (const [provider, data] of Object.entries(byProvider)) {
+      const card = document.createElement("div");
+      card.className = "summary-card";
+      card.innerHTML = `
+        <div class="label">${PROVIDER_LABELS[provider] || provider}</div>
+        <div class="value">${data.count}</div>
+      `;
+      container.appendChild(card);
+    }
+  }
+
+  function renderProviders(resources) {
+    const grouped = {};
+    for (const key of Object.keys(PROVIDER_LABELS)) grouped[key] = [];
+    for (const r of resources) {
+      if (!grouped[r.provider]) grouped[r.provider] = [];
+      grouped[r.provider].push(r);
+    }
+
+    const container = document.getElementById("providers-container");
+    container.innerHTML = "";
+
+    for (const [provider, items] of Object.entries(grouped)) {
+      const section = document.createElement("section");
+      section.className = "provider";
+
+      const header = document.createElement("div");
+      header.className = "provider-header";
+      header.innerHTML = `
+        <div class="provider-name">
+          <span class="provider-badge ${provider}"></span>
+          ${PROVIDER_LABELS[provider] || provider}
+        </div>
+        <div class="provider-count">${items.length} kaynak</div>
+      `;
+      section.appendChild(header);
+
+      if (items.length === 0) {
+        const empty = document.createElement("div");
+        empty.className = "empty-state";
+        empty.textContent = "Bu sağlayıcıda kaynak bulunamadı.";
+        section.appendChild(empty);
+      } else {
+        const table = document.createElement("table");
+        table.innerHTML = `
+          <thead>
+            <tr>
+              <th>Ad</th>
+              <th>Durum</th>
+              <th>Tip</th>
+              <th>Bölge</th>
+              <th>IP</th>
+              <th>Aylık $</th>
+            </tr>
+          </thead>
+          <tbody>
+            ${items.map(r => `
+              <tr>
+                <td>${r.name || "—"}</td>
+                <td><span class="status-pill ${statusClass(r.status)}">${r.status || "unknown"}</span></td>
+                <td class="mono">${r.server_type || "—"}</td>
+                <td class="mono">${r.region || "—"}</td>
+                <td class="mono">${r.public_ip || "—"}</td>
+                <td class="mono">${r.monthly_cost_usd != null ? r.monthly_cost_usd.toFixed(2) : "—"}</td>
+              </tr>
+            `).join("")}
+          </tbody>
+        `;
+        section.appendChild(table);
+      }
+
+      container.appendChild(section);
+    }
+  }
+
+  function showError(message) {
+    const banner = document.getElementById("error-banner");
+    banner.textContent = message;
+    banner.style.display = "block";
+  }
+
+  function hideError() {
+    document.getElementById("error-banner").style.display = "none";
+  }
+
+  async function loadResources() {
+    const statusEl = document.getElementById("refresh-status");
+    try {
+      const response = await fetch(`${API_BASE}/api/resources`);
+      if (!response.ok) throw new Error(`API ${response.status} döndü`);
+      const resources = await response.json();
+
+      hideError();
+      renderSummary(resources);
+      renderProviders(resources);
+      statusEl.innerHTML = `<span class="dot"></span>bağlı — son güncelleme ${new Date().toLocaleTimeString("tr-TR")}`;
+    } catch (err) {
+      showError(`API'ye bağlanılamadı: ${err.message}. Backend'in (uvicorn) çalıştığından ve CORS'un açık olduğundan emin ol.`);
+      statusEl.innerHTML = `<span class="dot" style="background:#F0654A"></span>bağlantı hatası`;
+    }
+  }
+
+  loadResources();
+  setInterval(loadResources, 15000);
+</script>
+</body>
+</html>
