@@ -1,16 +1,25 @@
-from fastapi import FastAPI
+from fastapi import FastAPI, Depends, HTTPException
 from fastapi.staticfiles import StaticFiles
 from fastapi.middleware.cors import CORSMiddleware
 from typing import List
+from fastapi.responses import FileResponse
+from pydantic import BaseModel
 import asyncio
 
+from app.auth import verify_password, create_access_token, verify_token
 from app.config import settings
 from app.providers.base import CloudResource 
 from app.providers.hetzner import fetch_hetzner_servers
 from app.providers.digitalocean import fetch_digitalocean_droplets
 from app.providers.aws import fetch_aws_instances
+from app.providers.prometheus import fetch_cpu_usage
 
 
+
+
+
+class LoginRequest(BaseModel):
+    password: str
 
 app = FastAPI()
 app.add_middleware(
@@ -23,25 +32,33 @@ app.mount("/static", StaticFiles(directory="static", html=True), name="static")
 
 
 @app.get("/")
-def root():
-    return {"status": "ok", "message": "Multi-Cloud Financial Solution is Working!"}
+async def root():
+    return FileResponse("static/index.html")
 
-@app.get("/api/hetzner")
+@app.post("/api/login")
+async def login(credentials: LoginRequest):
+    if not verify_password(credentials.password):
+        raise HTTPException(status_code=401, detail="Şifre yanlış")
+
+    token = create_access_token()
+    return {"access_token": token, "token_type": "bearer"}
+
+@app.get("/api/hetzner", dependencies=[Depends(verify_token)])
 async def get_hetzner_servers():
     servers = await fetch_hetzner_servers()
     return {"servers": servers}
 
-@app.get("/api/digitalocean")
+@app.get("/api/digitalocean", dependencies=[Depends(verify_token)])
 async def get_digitalocean_droplets():
     droplets = await fetch_digitalocean_droplets()
     return {"droplets": droplets}
 
-@app.get("/api/aws")
+@app.get("/api/aws", dependencies=[Depends(verify_token)])
 async def get_aws_instances():
     instances = await fetch_aws_instances()
     return {"instances": instances}
 
-@app.get("/api/resources", response_model=List[CloudResource])
+@app.get("/api/resources", response_model=List[CloudResource], dependencies=[Depends(verify_token)])
 async def get_resources():
     hetzner_task = fetch_hetzner_servers()
     digitalocean_task = fetch_digitalocean_droplets()
@@ -56,4 +73,7 @@ async def get_resources():
     all_resources = hetzner_servers + digitalocean_droplets + aws_instances
     return all_resources
     
-
+@app.get("/api/metrics/cpu", dependencies=[Depends(verify_token)])
+async def get_cpu_metric():
+    cpu_usage = await fetch_cpu_usage()
+    return {"cpu_usage_percent": cpu_usage}

@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="tr">
+<html lang="en">
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -216,17 +216,105 @@
     font-size: 12px;
     font-family: 'JetBrains Mono', monospace;
   }
+
+  #login-overlay {
+    position: fixed;
+    inset: 0;
+    background: var(--bg);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 100;
+  }
+
+  #login-overlay.hidden { display: none; }
+
+  .login-box {
+    width: 100%;
+    max-width: 320px;
+    padding: 32px;
+    background: var(--panel);
+    border: 1px solid var(--panel-border);
+    border-radius: 8px;
+  }
+
+  .login-box .brand {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 13px;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    color: var(--accent);
+    margin-bottom: 4px;
+  }
+
+  .login-box h2 {
+    font-size: 18px;
+    margin-bottom: 20px;
+  }
+
+  .login-box input {
+    width: 100%;
+    background: var(--bg);
+    border: 1px solid var(--panel-border);
+    border-radius: 6px;
+    padding: 10px 12px;
+    color: var(--text-primary);
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 13px;
+    margin-bottom: 12px;
+  }
+
+  .login-box input:focus {
+    outline: none;
+    border-color: var(--accent);
+  }
+
+  .login-box button {
+    width: 100%;
+    background: var(--accent);
+    color: #06231F;
+    border: none;
+    border-radius: 6px;
+    padding: 10px 12px;
+    font-family: 'Inter', sans-serif;
+    font-weight: 600;
+    font-size: 13px;
+    cursor: pointer;
+  }
+
+  .login-box button:hover { opacity: 0.9; }
+
+  .login-error {
+    color: var(--danger);
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 12px;
+    margin-bottom: 12px;
+    min-height: 16px;
+  }
+
+  #dashboard { display: none; }
+  #dashboard.visible { display: block; }
 </style>
 </head>
 <body>
-  <div class="wrap">
+  <div id="login-overlay">
+    <div class="login-box">
+      <div class="brand">FleetView</div>
+      <h2>Sign in</h2>
+      <div class="login-error" id="login-error"></div>
+      <input type="password" id="login-password" placeholder="Password" autocomplete="current-password">
+      <button id="login-button">Sign in</button>
+    </div>
+  </div>
+
+  <div class="wrap" id="dashboard">
     <header>
       <div>
         <div class="brand">FleetView</div>
-        <h1>Kaynak Panosu</h1>
-        <div class="subtitle">AWS · Hetzner · DigitalOcean — tek ekranda</div>
+        <h1>Resource Dashboard</h1>
+        <div class="subtitle">AWS · Hetzner · DigitalOcean — in one view</div>
       </div>
-      <div id="refresh-status"><span class="dot"></span>bağlanıyor…</div>
+      <div id="refresh-status"><span class="dot"></span>connecting…</div>
     </header>
 
     <div class="error-banner" id="error-banner"></div>
@@ -235,7 +323,7 @@
 
     <div id="providers-container"></div>
 
-    <footer>API_BASE = <span id="api-base-label"></span> · her 15 saniyede otomatik yenilenir</footer>
+    <footer>API_BASE = <span id="api-base-label"></span> · auto-refreshes every 15 seconds</footer>
   </div>
 
 <script>
@@ -272,7 +360,7 @@
     const totalCard = document.createElement("div");
     totalCard.className = "summary-card";
     totalCard.innerHTML = `
-      <div class="label">Toplam Kaynak</div>
+      <div class="label">Total Resources</div>
       <div class="value accent">${resources.length}</div>
     `;
     container.appendChild(totalCard);
@@ -280,7 +368,7 @@
     const costCard = document.createElement("div");
     costCard.className = "summary-card";
     costCard.innerHTML = `
-      <div class="label">Tahmini Aylık Maliyet</div>
+      <div class="label">Estimated Monthly Cost</div>
       <div class="value">$${totalCost.toFixed(2)}</div>
     `;
     container.appendChild(costCard);
@@ -318,26 +406,26 @@
           <span class="provider-badge ${provider}"></span>
           ${PROVIDER_LABELS[provider] || provider}
         </div>
-        <div class="provider-count">${items.length} kaynak</div>
+        <div class="provider-count">${items.length} resources</div>
       `;
       section.appendChild(header);
 
       if (items.length === 0) {
         const empty = document.createElement("div");
         empty.className = "empty-state";
-        empty.textContent = "Bu sağlayıcıda kaynak bulunamadı.";
+        empty.textContent = "No resources found for this provider.";
         section.appendChild(empty);
       } else {
         const table = document.createElement("table");
         table.innerHTML = `
           <thead>
             <tr>
-              <th>Ad</th>
-              <th>Durum</th>
-              <th>Tip</th>
-              <th>Bölge</th>
+              <th>Name</th>
+              <th>Status</th>
+              <th>Type</th>
+              <th>Region</th>
               <th>IP</th>
-              <th>Aylık $</th>
+              <th>Monthly $</th>
             </tr>
           </thead>
           <tbody>
@@ -370,25 +458,148 @@
     document.getElementById("error-banner").style.display = "none";
   }
 
+  // Token, sekme açık olduğu sürece hafızada tutulur (sekme kapanınca/tarayıcı
+  // yeniden başlayınca silinir — sessionStorage bunun için kullanılıyor,
+  // localStorage kullanmıyoruz çünkü o sonsuza kadar kalıcı olurdu).
+  function getToken() {
+    return sessionStorage.getItem("fleetview_token");
+  }
+
+  function setToken(token) {
+    sessionStorage.setItem("fleetview_token", token);
+  }
+
+  function clearToken() {
+    sessionStorage.removeItem("fleetview_token");
+  }
+
+  function showLogin(message) {
+    document.getElementById("login-overlay").classList.remove("hidden");
+    document.getElementById("dashboard").classList.remove("visible");
+    document.getElementById("login-error").textContent = message || "";
+  }
+
+  function showDashboard() {
+    document.getElementById("login-overlay").classList.add("hidden");
+    document.getElementById("dashboard").classList.add("visible");
+  }
+
+  async function handleLogin() {
+    const password = document.getElementById("login-password").value;
+    const errorEl = document.getElementById("login-error");
+    errorEl.textContent = "";
+
+    try {
+      const response = await fetch(`${API_BASE}/api/login`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ password }),
+      });
+
+      if (!response.ok) {
+        errorEl.textContent = "Incorrect password.";
+        return;
+      }
+
+      const data = await response.json();
+      setToken(data.access_token);
+      showDashboard();
+      loadResources();
+    } catch (err) {
+      errorEl.textContent = `Connection error: ${err.message}`;
+    }
+  }
+
+  document.getElementById("login-button").addEventListener("click", handleLogin);
+  document.getElementById("login-password").addEventListener("keydown", (e) => {
+    if (e.key === "Enter") handleLogin();
+  });
+
+  function renderCpuCard(cpuPercent) {
+    const container = document.getElementById("summary-row");
+    const card = document.createElement("div");
+    card.className = "summary-card";
+
+    if (cpuPercent === null || cpuPercent === undefined) {
+      card.innerHTML = `
+        <div class="label">Hetzner CPU Usage</div>
+        <div class="value" style="color: var(--text-secondary); font-size: 15px;">no data</div>
+      `;
+    } else {
+      const isHigh = cpuPercent > 80;
+      card.innerHTML = `
+        <div class="label">Hetzner CPU Usage</div>
+        <div class="value" style="color: ${isHigh ? 'var(--danger)' : 'var(--accent)'}">${cpuPercent}%</div>
+      `;
+    }
+    container.appendChild(card);
+  }
+
+  async function loadCpuMetric() {
+    const token = getToken();
+    if (!token) return;
+
+    try {
+      const response = await fetch(`${API_BASE}/api/metrics/cpu`, {
+        headers: { Authorization: `Bearer ${token}` },
+      });
+      if (!response.ok) {
+        renderCpuCard(null);
+        return;
+      }
+      const data = await response.json();
+      renderCpuCard(data.cpu_usage_percent);
+    } catch (err) {
+      renderCpuCard(null);
+    }
+  }
+
   async function loadResources() {
     const statusEl = document.getElementById("refresh-status");
+    const token = getToken();
+    if (!token) {
+      showLogin();
+      return;
+    }
+
     try {
-      const response = await fetch(`${API_BASE}/api/resources`);
-      if (!response.ok) throw new Error(`API ${response.status} döndü`);
+      const response = await fetch(`${API_BASE}/api/resources`, {
+        headers: { Authorization: `Bearer ${token}` },
+      });
+
+      if (response.status === 401) {
+        // Token süresi dolmuş veya geçersiz — tekrar login iste
+        clearToken();
+        showLogin("Session expired, please sign in again.");
+        return;
+      }
+
+      if (!response.ok) throw new Error(`API returned ${response.status}`);
       const resources = await response.json();
 
       hideError();
       renderSummary(resources);
       renderProviders(resources);
-      statusEl.innerHTML = `<span class="dot"></span>bağlı — son güncelleme ${new Date().toLocaleTimeString("tr-TR")}`;
+      await loadCpuMetric();
+      statusEl.innerHTML = `<span class="dot"></span>connected — last updated ${new Date().toLocaleTimeString("en-US")}`;
     } catch (err) {
-      showError(`API'ye bağlanılamadı: ${err.message}. Backend'in (uvicorn) çalıştığından ve CORS'un açık olduğundan emin ol.`);
-      statusEl.innerHTML = `<span class="dot" style="background:#F0654A"></span>bağlantı hatası`;
+      showError(`Could not connect to the API: ${err.message}. Make sure the backend (uvicorn) is running and CORS is enabled.`);
+      statusEl.innerHTML = `<span class="dot" style="background:#F0654A"></span>connection error`;
     }
   }
 
-  loadResources();
-  setInterval(loadResources, 15000);
+  // Sayfa açılışında: token varsa direkt dashboard'u göster ve veriyi çek,
+  // yoksa login ekranını göster.
+  if (getToken()) {
+    showDashboard();
+    loadResources();
+  } else {
+    showLogin();
+  }
+
+  setInterval(() => {
+    if (getToken()) loadResources();
+  }, 15000);
 </script>
 </body>
 </html>
