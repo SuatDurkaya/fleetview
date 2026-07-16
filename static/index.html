@@ -515,42 +515,48 @@
     if (e.key === "Enter") handleLogin();
   });
 
-  function renderCpuCard(cpuPercent) {
+  function renderMetricCard(label, percent) {
     const container = document.getElementById("summary-row");
     const card = document.createElement("div");
     card.className = "summary-card";
 
-    if (cpuPercent === null || cpuPercent === undefined) {
+    if (percent === null || percent === undefined) {
       card.innerHTML = `
-        <div class="label">Hetzner CPU Usage</div>
+        <div class="label">${label}</div>
         <div class="value" style="color: var(--text-secondary); font-size: 15px;">no data</div>
       `;
     } else {
-      const isHigh = cpuPercent > 80;
+      const isHigh = percent > 80;
       card.innerHTML = `
-        <div class="label">Hetzner CPU Usage</div>
-        <div class="value" style="color: ${isHigh ? 'var(--danger)' : 'var(--accent)'}">${cpuPercent}%</div>
+        <div class="label">${label}</div>
+        <div class="value" style="color: ${isHigh ? 'var(--danger)' : 'var(--accent)'}">${percent}%</div>
       `;
     }
     container.appendChild(card);
   }
 
-  async function loadCpuMetric() {
+  async function loadMetrics() {
     const token = getToken();
     if (!token) return;
 
     try {
-      const response = await fetch(`${API_BASE}/api/metrics/cpu`, {
+      const response = await fetch(`${API_BASE}/api/metrics`, {
         headers: { Authorization: `Bearer ${token}` },
       });
       if (!response.ok) {
-        renderCpuCard(null);
+        renderMetricCard("Hetzner CPU Usage", null);
+        renderMetricCard("Hetzner RAM Usage", null);
+        renderMetricCard("Hetzner Disk Usage", null);
         return;
       }
       const data = await response.json();
-      renderCpuCard(data.cpu_usage_percent);
+      renderMetricCard("Hetzner CPU Usage", data.cpu_usage_percent);
+      renderMetricCard("Hetzner RAM Usage", data.ram_usage_percent);
+      renderMetricCard("Hetzner Disk Usage", data.disk_usage_percent);
     } catch (err) {
-      renderCpuCard(null);
+      renderMetricCard("Hetzner CPU Usage", null);
+      renderMetricCard("Hetzner RAM Usage", null);
+      renderMetricCard("Hetzner Disk Usage", null);
     }
   }
 
@@ -580,7 +586,7 @@
       hideError();
       renderSummary(resources);
       renderProviders(resources);
-      await loadCpuMetric();
+      await loadMetrics();
       statusEl.innerHTML = `<span class="dot"></span>connected — last updated ${new Date().toLocaleTimeString("en-US")}`;
     } catch (err) {
       showError(`Could not connect to the API: ${err.message}. Make sure the backend (uvicorn) is running and CORS is enabled.`);
