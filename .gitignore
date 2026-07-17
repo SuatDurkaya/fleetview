@@ -3,3 +3,5 @@ venv/
 __pycache__/
 *.pyc
 .directory
+.pytest_cache/
+tests/__pycache__/
