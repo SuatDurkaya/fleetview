@@ -4,3 +4,5 @@ __pycache__/
 .env
 .git/
 .github/
+.pytest_cache
+tests/__pycache__

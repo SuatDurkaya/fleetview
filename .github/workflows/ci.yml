@@ -11,17 +11,22 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-      - name: Kodu çek
+      - name: Grab code
         uses: actions/checkout@v4
 
-      - name: Python kur
+      - name: Install python
         uses: actions/setup-python@v5
         with:
           python-version: "3.12"
 
-      - name: Bağımlılıkları kur
-        run: pip install -r requirements.txt
-
-      - name: Uygulamanın import edilebildiğini kontrol et
+      - name: Install dependencies
         run: |
-          python -c "from app.main import app; print('OK - FastAPI app basariyla yuklendi')"
+          pip install -r requirements.txt
+          pip install -r requirements-dev.txt
+
+      - name: Check that the application can be imported
+        run: |
+          python -c "from app.main import app; print('OK - FastAPI has been imported successfully')"
+
+      - name: Run tests
+        run: pytest tests/ -v
