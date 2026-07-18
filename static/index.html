@@ -5,19 +5,39 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>FleetView</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
-<link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;700&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;600;700&family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500;600&display=swap" rel="stylesheet">
 <style>
   :root {
-    --bg: #0D1117;
-    --panel: #131A22;
-    --panel-border: #1F2A35;
-    --text-primary: #E6EDF3;
-    --text-secondary: #7D8B99;
-    --accent: #4FD1C5;
-    --accent-dim: #2B4A47;
+    --bg: #0A0C16;
+    --bg-elevated: #10132316;
+    --panel: #12152A;
+    --panel-alt: #171B33;
+    --panel-border: #262C4A;
+    --hairline: #1E2340;
+
+    --text-primary: #F2F3F8;
+    --text-secondary: #8B90AE;
+    --text-tertiary: #565C7D;
+
+    --primary: #B85CF0;
+    --primary-dim: rgba(184, 92, 240, 0.16);
+    --cyan: #3FD6DE;
+    --cyan-dim: rgba(63, 214, 222, 0.14);
+
+    --signal: #34D399;
+    --signal-dim: rgba(52, 211, 153, 0.14);
     --warn: #F0B429;
-    --danger: #F0654A;
-    --ok: #4FD1C5;
+    --warn-dim: rgba(240, 180, 41, 0.14);
+    --danger: #F1587A;
+    --danger-dim: rgba(241, 88, 122, 0.14);
+
+    --aws-hue: #F0B429;
+    --hetzner-hue: #34D399;
+    --do-hue: #3FD6DE;
+
+    --font-display: 'Space Grotesk', sans-serif;
+    --font-body: 'IBM Plex Sans', sans-serif;
+    --font-mono: 'IBM Plex Mono', monospace;
   }
 
   * { box-sizing: border-box; margin: 0; padding: 0; }
@@ -25,46 +45,143 @@
   body {
     background: var(--bg);
     color: var(--text-primary);
-    font-family: 'Inter', sans-serif;
+    font-family: var(--font-body);
     min-height: 100vh;
-    padding: 40px 24px;
   }
 
-  .wrap { max-width: 1100px; margin: 0 auto; }
+  /* ---------- App shell: sidebar + content ---------- */
+
+  .app-shell {
+    display: flex;
+    min-height: 100vh;
+  }
+
+  .sidebar {
+    width: 220px;
+    flex-shrink: 0;
+    background: var(--panel);
+    border-right: 1px solid var(--hairline);
+    padding: 22px 16px;
+    display: flex;
+    flex-direction: column;
+  }
+
+  .sidebar-brand {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 6px 8px 26px 8px;
+    font-family: var(--font-display);
+    font-weight: 600;
+    font-size: 16px;
+    letter-spacing: -0.01em;
+  }
+
+  .sidebar-mark {
+    width: 30px;
+    height: 30px;
+    border-radius: 9px;
+    background: linear-gradient(135deg, var(--primary), var(--cyan));
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-family: var(--font-display);
+    font-weight: 700;
+    font-size: 12.5px;
+    color: #0A0C16;
+  }
+
+  .sidebar-nav-label {
+    font-family: var(--font-mono);
+    font-size: 10px;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    color: var(--text-tertiary);
+    padding: 0 10px;
+    margin-bottom: 8px;
+  }
+
+  .sidebar-nav-item {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 9px 10px;
+    border-radius: 9px;
+    font-size: 13.5px;
+    color: var(--text-secondary);
+    margin-bottom: 2px;
+  }
+
+  .sidebar-nav-item .provider-badge { width: 7px; height: 7px; }
+
+  .sidebar-nav-item.active {
+    background: var(--primary-dim);
+    color: var(--text-primary);
+    font-weight: 500;
+  }
+
+  .sidebar-footer {
+    margin-top: auto;
+    padding-top: 16px;
+    border-top: 1px solid var(--hairline);
+  }
+
+  .sidebar-account {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 6px 8px;
+  }
+
+  .sidebar-avatar {
+    width: 32px;
+    height: 32px;
+    border-radius: 50%;
+    background: linear-gradient(135deg, var(--cyan), var(--primary));
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-family: var(--font-display);
+    font-weight: 700;
+    font-size: 13px;
+    color: #0A0C16;
+  }
+
+  .sidebar-account-name { font-size: 13px; font-weight: 500; }
+  .sidebar-account-sub { font-size: 11px; color: var(--text-tertiary); }
+
+  .content {
+    flex: 1;
+    min-width: 0;
+    padding: 34px 40px 48px;
+    max-width: 1160px;
+  }
+
+  /* ---------- Header ---------- */
 
   header {
     display: flex;
     justify-content: space-between;
     align-items: flex-end;
-    margin-bottom: 32px;
-    padding-bottom: 20px;
-    border-bottom: 1px solid var(--panel-border);
-  }
-
-  .brand {
-    font-family: 'JetBrains Mono', monospace;
-    font-size: 13px;
-    letter-spacing: 0.14em;
-    text-transform: uppercase;
-    color: var(--accent);
-    margin-bottom: 6px;
+    margin-bottom: 26px;
   }
 
   h1 {
-    font-size: 28px;
-    font-weight: 700;
-    letter-spacing: -0.01em;
+    font-family: var(--font-display);
+    font-size: 25px;
+    font-weight: 600;
+    letter-spacing: -0.015em;
   }
 
   .subtitle {
     color: var(--text-secondary);
-    font-size: 14px;
-    margin-top: 4px;
+    font-size: 13.5px;
+    margin-top: 6px;
   }
 
   #refresh-status {
-    font-family: 'JetBrains Mono', monospace;
-    font-size: 12px;
+    font-family: var(--font-mono);
+    font-size: 11.5px;
     color: var(--text-secondary);
     text-align: right;
   }
@@ -74,69 +191,80 @@
     width: 6px;
     height: 6px;
     border-radius: 50%;
-    background: var(--ok);
-    margin-right: 6px;
-    animation: pulse 2s infinite;
+    background: var(--signal);
+    margin-right: 7px;
+    animation: pulse 2.4s infinite;
   }
 
   @keyframes pulse {
     0%, 100% { opacity: 1; }
-    50% { opacity: 0.35; }
+    50% { opacity: 0.3; }
   }
+
+  /* ---------- KPI cards ---------- */
 
   .summary-row {
     display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
-    gap: 12px;
-    margin-bottom: 32px;
+    grid-template-columns: repeat(auto-fit, minmax(170px, 1fr));
+    gap: 14px;
+    margin-bottom: 26px;
   }
 
   .summary-card {
     background: var(--panel);
     border: 1px solid var(--panel-border);
-    border-radius: 8px;
-    padding: 16px 18px;
+    border-radius: 16px;
+    padding: 18px 20px;
+    box-shadow: 0 8px 20px rgba(4, 6, 16, 0.35);
   }
 
   .summary-card .label {
-    font-family: 'JetBrains Mono', monospace;
-    font-size: 11px;
-    letter-spacing: 0.08em;
-    text-transform: uppercase;
+    font-size: 12.5px;
     color: var(--text-secondary);
-    margin-bottom: 8px;
+    margin-bottom: 10px;
   }
 
   .summary-card .value {
-    font-family: 'JetBrains Mono', monospace;
+    font-family: var(--font-display);
     font-size: 26px;
-    font-weight: 700;
+    font-weight: 600;
+    color: var(--text-primary);
   }
 
-  .summary-card .value.accent { color: var(--accent); }
+  .summary-card .value.accent {
+    background: linear-gradient(135deg, var(--cyan), var(--primary));
+    -webkit-background-clip: text;
+    background-clip: text;
+    color: transparent;
+  }
+
+  /* ---------- Provider sections ---------- */
 
   section.provider {
     background: var(--panel);
     border: 1px solid var(--panel-border);
-    border-radius: 8px;
+    border-radius: 16px;
     margin-bottom: 16px;
     overflow: hidden;
+    box-shadow: 0 8px 20px rgba(4, 6, 16, 0.3);
   }
 
   .provider-header {
     display: flex;
     align-items: center;
     justify-content: space-between;
-    padding: 14px 18px;
-    border-bottom: 1px solid var(--panel-border);
+    padding: 15px 20px;
+    border-bottom: 1px solid var(--hairline);
   }
 
   .provider-name {
     display: flex;
     align-items: center;
     gap: 10px;
+    font-family: var(--font-display);
     font-weight: 600;
-    font-size: 14px;
+    font-size: 14.5px;
+    letter-spacing: -0.01em;
   }
 
   .provider-badge {
@@ -145,77 +273,80 @@
     border-radius: 50%;
   }
 
-  .provider-badge.aws { background: #F0B429; }
-  .provider-badge.hetzner { background: #4FD1C5; }
-  .provider-badge.digitalocean { background: #4A90E2; }
+  .provider-badge.aws { background: var(--aws-hue); }
+  .provider-badge.hetzner { background: var(--hetzner-hue); }
+  .provider-badge.digitalocean { background: var(--do-hue); }
 
   .provider-count {
-    font-family: 'JetBrains Mono', monospace;
-    font-size: 12px;
-    color: var(--text-secondary);
+    font-family: var(--font-mono);
+    font-size: 11.5px;
+    color: var(--text-tertiary);
   }
 
   table { width: 100%; border-collapse: collapse; }
 
   th {
     text-align: left;
-    font-family: 'JetBrains Mono', monospace;
-    font-size: 10px;
-    letter-spacing: 0.08em;
+    font-size: 10.5px;
+    letter-spacing: 0.06em;
     text-transform: uppercase;
-    color: var(--text-secondary);
-    padding: 10px 18px;
+    color: var(--text-tertiary);
+    padding: 11px 20px;
     font-weight: 500;
   }
 
   td {
-    padding: 12px 18px;
+    padding: 13px 20px;
     font-size: 13px;
-    border-top: 1px solid var(--panel-border);
+    border-top: 1px solid var(--hairline);
   }
 
-  td.mono { font-family: 'JetBrains Mono', monospace; font-size: 12px; color: var(--text-secondary); }
+  tbody tr:hover td { background: var(--panel-alt); }
+
+  td.mono { font-family: var(--font-mono); font-size: 12px; color: var(--text-secondary); }
 
   .status-pill {
     display: inline-flex;
     align-items: center;
     gap: 6px;
-    font-family: 'JetBrains Mono', monospace;
-    font-size: 11px;
-    padding: 3px 9px;
+    font-family: var(--font-mono);
+    font-size: 10.5px;
+    letter-spacing: 0.02em;
+    padding: 4px 10px;
     border-radius: 20px;
+    font-weight: 500;
   }
 
-  .status-pill.running { background: var(--accent-dim); color: var(--accent); }
-  .status-pill.stopped { background: #3A2A28; color: var(--danger); }
-  .status-pill.unknown { background: #2A2E33; color: var(--text-secondary); }
+  .status-pill.running { background: var(--signal-dim); color: var(--signal); }
+  .status-pill.stopped { background: var(--danger-dim); color: var(--danger); }
+  .status-pill.idle { background: var(--warn-dim); color: var(--warn); }
+  .status-pill.unknown { background: var(--panel-alt); color: var(--text-tertiary); }
 
   .empty-state {
-    padding: 28px 18px;
-    color: var(--text-secondary);
-    font-size: 13px;
-    font-family: 'JetBrains Mono', monospace;
+    padding: 26px 20px;
+    color: var(--text-tertiary);
+    font-size: 12.5px;
   }
 
   .error-banner {
-    background: #2A1815;
-    border: 1px solid #4A2A20;
+    background: var(--danger-dim);
+    border: 1px solid rgba(241, 88, 122, 0.3);
     color: var(--danger);
-    padding: 14px 18px;
-    border-radius: 8px;
-    margin-bottom: 24px;
-    font-family: 'JetBrains Mono', monospace;
-    font-size: 12px;
-    display: none;
+    padding: 13px 18px;
+    border-radius: 12px;
+    margin-bottom: 22px;
+    font-size: 12.5px;
   }
 
   footer {
-    margin-top: 32px;
+    margin-top: 28px;
     text-align: center;
-    color: var(--text-secondary);
-    font-size: 12px;
-    font-family: 'JetBrains Mono', monospace;
+    color: var(--text-tertiary);
+    font-size: 11px;
+    font-family: var(--font-mono);
   }
+
+  /* ---------- Login ---------- */
 
   #login-overlay {
     position: fixed;
@@ -235,71 +366,87 @@
     padding: 32px;
     background: var(--panel);
     border: 1px solid var(--panel-border);
-    border-radius: 8px;
+    border-radius: 20px;
+    box-shadow: 0 20px 50px rgba(4, 6, 16, 0.5);
   }
 
-  .login-box .brand {
-    font-family: 'JetBrains Mono', monospace;
-    font-size: 13px;
-    letter-spacing: 0.14em;
-    text-transform: uppercase;
-    color: var(--accent);
-    margin-bottom: 4px;
+  .login-mark {
+    width: 40px;
+    height: 40px;
+    border-radius: 12px;
+    background: linear-gradient(135deg, var(--primary), var(--cyan));
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-family: var(--font-display);
+    font-weight: 700;
+    font-size: 15px;
+    color: #0A0C16;
+    margin-bottom: 18px;
   }
 
   .login-box h2 {
-    font-size: 18px;
-    margin-bottom: 20px;
+    font-family: var(--font-display);
+    font-size: 19px;
+    font-weight: 600;
+    margin-bottom: 22px;
+    color: var(--text-primary);
   }
 
   .login-box input {
     width: 100%;
     background: var(--bg);
     border: 1px solid var(--panel-border);
-    border-radius: 6px;
-    padding: 10px 12px;
+    border-radius: 10px;
+    padding: 11px 13px;
     color: var(--text-primary);
-    font-family: 'JetBrains Mono', monospace;
-    font-size: 13px;
+    font-size: 13.5px;
     margin-bottom: 12px;
   }
 
   .login-box input:focus {
     outline: none;
-    border-color: var(--accent);
+    border-color: var(--primary);
   }
 
   .login-box button {
     width: 100%;
-    background: var(--accent);
-    color: #06231F;
+    background: linear-gradient(135deg, var(--primary), #9548D6);
+    color: #FFFFFF;
     border: none;
-    border-radius: 6px;
-    padding: 10px 12px;
-    font-family: 'Inter', sans-serif;
+    border-radius: 10px;
+    padding: 11px 12px;
+    font-family: var(--font-body);
     font-weight: 600;
-    font-size: 13px;
+    font-size: 13.5px;
     cursor: pointer;
+    transition: opacity 0.15s ease;
   }
 
   .login-box button:hover { opacity: 0.9; }
 
   .login-error {
     color: var(--danger);
-    font-family: 'JetBrains Mono', monospace;
     font-size: 12px;
     margin-bottom: 12px;
-    min-height: 16px;
+    min-height: 15px;
   }
 
   #dashboard { display: none; }
-  #dashboard.visible { display: block; }
+  #dashboard.visible { display: flex; }
+
+  @media (max-width: 720px) {
+    .sidebar { display: none; }
+    .content { padding: 24px 18px; }
+  }
 </style>
+
+
 </head>
 <body>
   <div id="login-overlay">
     <div class="login-box">
-      <div class="brand">FleetView</div>
+      <div class="login-mark">FV</div>
       <h2>Sign in</h2>
       <div class="login-error" id="login-error"></div>
       <input type="password" id="login-password" placeholder="Password" autocomplete="current-password">
@@ -307,23 +454,46 @@
     </div>
   </div>
 
-  <div class="wrap" id="dashboard">
-    <header>
-      <div>
-        <div class="brand">FleetView</div>
-        <h1>Resource Dashboard</h1>
-        <div class="subtitle">AWS · Hetzner · DigitalOcean — in one view</div>
+  <div class="app-shell" id="dashboard">
+    <aside class="sidebar">
+      <div class="sidebar-brand">
+        <div class="sidebar-mark">FV</div>
+        <span>FleetView</span>
       </div>
-      <div id="refresh-status"><span class="dot"></span>connecting…</div>
-    </header>
+      <nav class="sidebar-nav">
+        <div class="sidebar-nav-label">Providers</div>
+        <div class="sidebar-nav-item active"><span class="provider-badge aws"></span>AWS</div>
+        <div class="sidebar-nav-item"><span class="provider-badge hetzner"></span>Hetzner</div>
+        <div class="sidebar-nav-item"><span class="provider-badge digitalocean"></span>DigitalOcean</div>
+      </nav>
+      <div class="sidebar-footer">
+        <div class="sidebar-account">
+          <div class="sidebar-avatar">S</div>
+          <div>
+            <div class="sidebar-account-name">Suat</div>
+            <div class="sidebar-account-sub">Operator</div>
+          </div>
+        </div>
+      </div>
+    </aside>
 
-    <div class="error-banner" id="error-banner"></div>
+    <main class="content">
+      <header>
+        <div>
+          <h1>Welcome back 👋</h1>
+          <div class="subtitle">AWS · Hetzner · DigitalOcean — in one view</div>
+        </div>
+        <div id="refresh-status"><span class="dot"></span>connecting…</div>
+      </header>
 
-    <div class="summary-row" id="summary-row"></div>
+      <div class="error-banner" id="error-banner"></div>
 
-    <div id="providers-container"></div>
+      <div class="summary-row" id="summary-row"></div>
 
-    <footer>API_BASE = <span id="api-base-label"></span> · auto-refreshes every 15 seconds</footer>
+      <div id="providers-container"></div>
+
+      <footer>API_BASE = <span id="api-base-label"></span> · auto-refreshes every 15 seconds</footer>
+    </main>
   </div>
 
 <script>
@@ -384,7 +554,29 @@
     }
   }
 
-  function renderProviders(resources) {
+  function metricsRowHtml(metrics) {
+    if (!metrics) return "";
+
+    const fmt = (v) => (v === null || v === undefined ? "—" : `${v}%`);
+    const idleBadge = metrics.is_idle
+      ? `<span class="status-pill idle" style="margin-left:8px;">IDLE — LOW USAGE</span>`
+      : "";
+
+    return `
+      <tr>
+        <td colspan="6" class="mono" style="background: var(--bg); font-size: 12px;">
+          <span style="color: var(--text-secondary);">LIVE —</span>
+          CPU ${fmt(metrics.cpu_usage_percent)} ·
+          RAM ${fmt(metrics.ram_usage_percent)} ·
+          Disk ${fmt(metrics.disk_usage_percent)} ·
+          1h avg CPU ${fmt(metrics.cpu_usage_1h_avg_percent)}
+          ${idleBadge}
+        </td>
+      </tr>
+    `;
+  }
+
+  function renderProviders(resources, metricsByProvider = {}) {
     const grouped = {};
     for (const key of Object.keys(PROVIDER_LABELS)) grouped[key] = [];
     for (const r of resources) {
@@ -439,6 +631,7 @@
                 <td class="mono">${r.monthly_cost_usd != null ? r.monthly_cost_usd.toFixed(2) : "—"}</td>
               </tr>
             `).join("")}
+            ${metricsRowHtml(metricsByProvider[provider])}
           </tbody>
         `;
         section.appendChild(table);
@@ -515,48 +708,23 @@
     if (e.key === "Enter") handleLogin();
   });
 
-  function renderMetricCard(label, percent) {
-    const container = document.getElementById("summary-row");
-    const card = document.createElement("div");
-    card.className = "summary-card";
-
-    if (percent === null || percent === undefined) {
-      card.innerHTML = `
-        <div class="label">${label}</div>
-        <div class="value" style="color: var(--text-secondary); font-size: 15px;">no data</div>
-      `;
-    } else {
-      const isHigh = percent > 80;
-      card.innerHTML = `
-        <div class="label">${label}</div>
-        <div class="value" style="color: ${isHigh ? 'var(--danger)' : 'var(--accent)'}">${percent}%</div>
-      `;
-    }
-    container.appendChild(card);
-  }
-
-  async function loadMetrics() {
+  async function fetchLiveMetrics() {
     const token = getToken();
-    if (!token) return;
+    if (!token) return {};
 
     try {
       const response = await fetch(`${API_BASE}/api/metrics`, {
         headers: { Authorization: `Bearer ${token}` },
       });
-      if (!response.ok) {
-        renderMetricCard("Hetzner CPU Usage", null);
-        renderMetricCard("Hetzner RAM Usage", null);
-        renderMetricCard("Hetzner Disk Usage", null);
-        return;
-      }
+      if (!response.ok) return {};
       const data = await response.json();
-      renderMetricCard("Hetzner CPU Usage", data.cpu_usage_percent);
-      renderMetricCard("Hetzner RAM Usage", data.ram_usage_percent);
-      renderMetricCard("Hetzner Disk Usage", data.disk_usage_percent);
+      // Metrikler şu an tek bir Hetzner sunucusundan geliyor (Prometheus
+      // sadece o sunucuyu izliyor) — bu yüzden "hetzner" sağlayıcısına
+      // eşliyoruz. İleride başka sağlayıcılarda da sunucu izlenirse,
+      // backend'in /api/metrics'i sağlayıcı bazlı ayırması gerekecek.
+      return { hetzner: data };
     } catch (err) {
-      renderMetricCard("Hetzner CPU Usage", null);
-      renderMetricCard("Hetzner RAM Usage", null);
-      renderMetricCard("Hetzner Disk Usage", null);
+      return {};
     }
   }
 
@@ -582,11 +750,11 @@
 
       if (!response.ok) throw new Error(`API returned ${response.status}`);
       const resources = await response.json();
+      const metricsByProvider = await fetchLiveMetrics();
 
       hideError();
       renderSummary(resources);
-      renderProviders(resources);
-      await loadMetrics();
+      renderProviders(resources, metricsByProvider);
       statusEl.innerHTML = `<span class="dot"></span>connected — last updated ${new Date().toLocaleTimeString("en-US")}`;
     } catch (err) {
       showError(`Could not connect to the API: ${err.message}. Make sure the backend (uvicorn) is running and CORS is enabled.`);

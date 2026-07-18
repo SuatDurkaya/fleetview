@@ -13,7 +13,8 @@ class Settings(BaseSettings):
     jwt_secret_key: str = ""
     jwt_algorithm: str = "HS256"
     prometheus_url: str = ""
-
+    idle_cpu_threshold_percent: float = 10.0
+    
     model_config = SettingsConfigDict(env_file=".env", extra="ignore")
 
 

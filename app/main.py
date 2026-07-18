@@ -12,7 +12,7 @@ from app.providers.base import CloudResource
 from app.providers.hetzner import fetch_hetzner_servers
 from app.providers.digitalocean import fetch_digitalocean_droplets
 from app.providers.aws import fetch_aws_instances
-from app.providers.prometheus import fetch_cpu_usage, fetch_ram_usage, fetch_disk_usage
+from app.providers.prometheus import fetch_cpu_usage, fetch_ram_usage, fetch_disk_usage, fetch_cpu_usage_1h_avg
 
 
 
@@ -75,13 +75,20 @@ async def get_resources():
     
 @app.get("/api/metrics", dependencies=[Depends(verify_token)])
 async def get_metrics():
-    cpu, ram, disk = await asyncio.gather(
+    cpu, ram, disk, cpu_1h_avg = await asyncio.gather(
         fetch_cpu_usage(),
         fetch_ram_usage(),
         fetch_disk_usage(),
+        fetch_cpu_usage_1h_avg(),
+    )
+
+    is_idle = (
+        cpu_1h_avg is not None and cpu_1h_avg < settings.idle_cpu_threshold_percent
     )
     return {
         "cpu_usage_percent": cpu,
         "ram_usage_percent": ram,
         "disk_usage_percent": disk,
+        "cpu_usage_1h_avg_percent": cpu_1h_avg,
+        "is_idle": is_idle,
     }

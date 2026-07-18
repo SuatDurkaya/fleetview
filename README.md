@@ -1,8 +1,15 @@
 # FleetView
 
+[![CI](https://github.com/suatdurkaya/fleetview/actions/workflows/ci.yml/badge.svg)](https://github.com/suatdurkaya/fleetview/actions/workflows/ci.yml)
+[![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE)
+[![Python 3.12](https://img.shields.io/badge/python-3.12-blue.svg)](https://www.python.org/downloads/)
+[![FastAPI](https://img.shields.io/badge/FastAPI-005571?logo=fastapi)](https://fastapi.tiangolo.com/)
+
 A multi-cloud resource dashboard that pulls live server data from AWS, Hetzner,
 and DigitalOcean into a single, authenticated view — with real-time CPU/RAM/disk
 metrics powered by Prometheus.
+
+![FleetView dashboard screenshot](docs/screenshot.png)
 
 ## Why this exists
 
@@ -11,13 +18,6 @@ different consoles, each with its own UI, pricing model, and data format.
 FleetView solves this by normalizing resources from all three providers into
 a single schema and surfacing them (plus live system metrics) in one
 dashboard.
-
-## What I learned building this
-
-- How async/await and asyncio.gather enable true parallel I/O instead of sequential API calls
-- JWT-based authentication from scratch: password hashing, token signing, expiry handling
-- Setting up Prometheus + node_exporter as systemd services on a production server, with least-privilege dedicated users
-- Docker layer caching and why `.dockerignore` matters for both build speed and secret safety
 
 ## Features
 
@@ -79,7 +79,7 @@ Prometheus · node_exporter · Docker · Docker Compose · GitHub Actions
 ### 1. Clone and configure
 
 ```bash
-git clone https://github.com/SuatDurkaya/fleetview
+git clone https://github.com/suatdurkaya/fleetview.git
 cd fleetview
 cp .env.example .env
 ```
@@ -120,7 +120,7 @@ offers them — this app only reads infrastructure state, it never modifies it.
 docker-compose up --build
 ```
 
-Open `http://localhost:8000/`, log in with the password you
+Open `http://localhost:8000/static/index.html`, log in with the password you
 hashed above.
 
 ## API reference
